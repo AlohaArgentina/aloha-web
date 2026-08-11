@@ -61,4 +61,16 @@ describe("consent", () => {
     acceptConsent();
     expect(document.querySelectorAll("#gtm-script")).toHaveLength(1);
   });
+
+  it("avisa por evento cuando se acepta o se rechaza", async () => {
+    const { acceptConsent, rejectConsent, CONSENT_CHANGED_EVENT } = await cargarModulo();
+    const onChange = vi.fn();
+    window.addEventListener(CONSENT_CHANGED_EVENT, onChange);
+
+    acceptConsent();
+    rejectConsent();
+
+    expect(onChange).toHaveBeenCalledTimes(2);
+    window.removeEventListener(CONSENT_CHANGED_EVENT, onChange);
+  });
 });

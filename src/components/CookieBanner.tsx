@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cookie } from "lucide-react";
@@ -11,13 +11,35 @@ import { getStoredConsent, acceptConsent, rejectConsent } from "@/lib/consent";
    con normalidad: son necesarios para prestar el servicio y no dependen de esta
    decisión. */
 
+/** Alto real del banner, para que otros elementos fijos (la burbuja de
+    WhatsApp) puedan correrse y no quedar tapados. Varía mucho según el ancho
+    de pantalla: el texto se envuelve en más líneas en mobile. */
+export const COOKIE_BANNER_RESIZE_EVENT = "aloha:cookie-banner-resize";
+
 const CookieBanner = () => {
   const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Se evalúa después del montaje para no bloquear el primer render.
     if (getStoredConsent() === null) setVisible(true);
   }, []);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!visible || !el) return;
+
+    const reportar = () =>
+      window.dispatchEvent(new CustomEvent(COOKIE_BANNER_RESIZE_EVENT, { detail: el.getBoundingClientRect().height }));
+
+    reportar();
+    const observer = new ResizeObserver(reportar);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      window.dispatchEvent(new CustomEvent(COOKIE_BANNER_RESIZE_EVENT, { detail: 0 }));
+    };
+  }, [visible]);
 
   const handleAccept = () => {
     acceptConsent();
@@ -33,6 +55,7 @@ const CookieBanner = () => {
     <AnimatePresence>
       {visible && (
         <motion.div
+          ref={ref}
           role="dialog"
           aria-live="polite"
           aria-label="Consentimiento de cookies"

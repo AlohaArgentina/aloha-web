@@ -26,6 +26,25 @@ Object.defineProperty(globalThis, "IntersectionObserver", {
   value: IntersectionObserverStub,
 });
 
+/* jsdom tampoco implementa ResizeObserver, que usa el banner de cookies para
+   avisarle a la burbuja de WhatsApp cuánto espacio ocupa y no quedar tapada. */
+class ResizeObserverStub implements ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+Object.defineProperty(window, "ResizeObserver", {
+  writable: true,
+  configurable: true,
+  value: ResizeObserverStub,
+});
+Object.defineProperty(globalThis, "ResizeObserver", {
+  writable: true,
+  configurable: true,
+  value: ResizeObserverStub,
+});
+
 /* jsdom tampoco implementa canvas. Los fondos animados de partículas piden un
    contexto 2D al montarse; devolver null hace que esos efectos se salteen
    limpiamente en los tests, que es justo lo que hace el componente si no hay
