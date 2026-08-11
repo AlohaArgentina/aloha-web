@@ -1,1 +1,14 @@
+# Rutas prerenderizadas (ver scripts/prerender.mjs): sin esto, Netlify
+# redirige (301) la URL sin barra final a la URL con barra, porque el
+# contenido vive en <ruta>/index.html. Ese 301 es la causa de KAN-41: Google
+# no indexa el contenido prerenderizado porque la URL del sitemap devuelve
+# una redirección en lugar de un 200. El "!" fuerza la regla por sobre el
+# comportamiento implícito de Netlify para directorios con index.html.
+/empleos              /empleos/index.html              200!
+/request              /request/index.html              200!
+/privacidad           /privacidad/index.html            200!
+/terminos             /terminos/index.html              200!
+/eliminacion-datos    /eliminacion-datos/index.html    200!
+/area-clientes        /area-clientes/index.html        200!
+
 /*    /index.html   200
