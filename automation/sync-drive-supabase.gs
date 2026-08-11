@@ -39,9 +39,9 @@
  */
 
 var CONFIG = [
-  { nombre: 'AVC',     clienteId: 'PEGAR-CLIENTE-ID-AVC',     carpetaId: 'PEGAR-CARPETA-ID-AVC' },
-  { nombre: 'Airsat',  clienteId: 'PEGAR-CLIENTE-ID-AIRSAT',  carpetaId: 'PEGAR-CARPETA-ID-AIRSAT' },
-  { nombre: 'Fiberty', clienteId: 'PEGAR-CLIENTE-ID-FIBERTY', carpetaId: 'PEGAR-CARPETA-ID-FIBERTY' },
+  { nombre: 'AVC',     clienteId: '52ef2392-8271-47d9-a533-3a6f50df6c82', carpetaId: 'PEGAR-CARPETA-ID-AVC' },
+  { nombre: 'Airsat',  clienteId: '35d23b11-f823-4e28-adf3-3678c5b0b35d', carpetaId: 'PEGAR-CARPETA-ID-AIRSAT' },
+  { nombre: 'Fiberty', clienteId: 'a0f9716c-7345-4cd5-8a2c-1775b769a24e', carpetaId: 'PEGAR-CARPETA-ID-FIBERTY' },
 ];
 
 function sincronizarTodo() {
