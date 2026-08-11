@@ -8,8 +8,16 @@ import AreaClientes from "./AreaClientes";
    solo credenciales válidas den acceso, que una sesión ya iniciada
    (supabase.auth.getSession) se respete al cargar la página, que los
    cambios de sesión (onAuthStateChange) se reflejen, y que cerrar sesión
-   llame a supabase.auth.signOut(). La librería de Supabase se mockea
-   entera: no hay proyecto real en los tests. */
+   llame a supabase.auth.signOut(). También que, ya logueado, se carguen y
+   muestren los datos del cliente (supabase.from). La librería de Supabase
+   se mockea entera: no hay proyecto real en los tests. El contenido
+   específico del panel (tabs, documentos) se prueba en PanelCliente.test.tsx. */
+
+const CLIENTE_DEMO = {
+  id: "c1", nombre: "AVC", responsable_cliente: "Juan Pérez", coordinador_aloha: "Ana",
+  contacto_coordinador: "ana@aloha.net.ar", horario_atencion: "Lunes a viernes 9 a 18 hs",
+  descripcion_servicio: "Soporte técnico nivel 1 y 2", fecha_inicio: "2024-03-01",
+};
 
 const signInWithPassword = vi.fn();
 const signOut = vi.fn();
@@ -17,11 +25,23 @@ const getSession = vi.fn();
 const onAuthStateChange = vi.fn();
 const unsubscribe = vi.fn();
 
+let resultadoCliente: { data: unknown; error: unknown };
+let resultadoReportes: { data: unknown; error: unknown };
+let resultadoFacturas: { data: unknown; error: unknown };
+
+const from = vi.fn((tabla: string) => ({
+  select: () => ({
+    single: () => Promise.resolve(resultadoCliente),
+    order: () => Promise.resolve(tabla === "reportes" ? resultadoReportes : resultadoFacturas),
+  }),
+}));
+
 vi.mock("@/lib/supabaseClient", () => ({
   supabaseConfigurado: true,
   get supabase() {
     return {
       auth: { signInWithPassword, signOut, getSession, onAuthStateChange },
+      from,
     };
   },
 }));
@@ -43,14 +63,17 @@ beforeEach(() => {
   signOut.mockReset();
   getSession.mockReset().mockResolvedValue({ data: { session: null } });
   onAuthStateChange.mockReset().mockReturnValue({ data: { subscription: { unsubscribe } } });
+  resultadoCliente = { data: CLIENTE_DEMO, error: null };
+  resultadoReportes = { data: [], error: null };
+  resultadoFacturas = { data: [], error: null };
 });
 
 describe("AreaClientes", () => {
-  it("muestra el login por defecto, no el contenido del portal", async () => {
+  it("muestra el login por defecto, no el panel", async () => {
     renderPagina();
 
     expect(await screen.findByRole("button", { name: /ingresar/i })).toBeInTheDocument();
-    expect(screen.queryByText(/reportes y estadísticas/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /cerrar sesión/i })).not.toBeInTheDocument();
   });
 
   it("rechaza credenciales incorrectas", async () => {
@@ -58,41 +81,50 @@ describe("AreaClientes", () => {
     signInWithPassword.mockResolvedValue({ error: { message: "Invalid login credentials" } });
     renderPagina();
 
-    await user.type(email(), "admin@aloha.net.ar");
+    await user.type(email(), "avc@aloha.net.ar");
     await user.type(password(), "contraseña-incorrecta");
     await user.click(ingresar());
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/email o contraseña incorrectos/i);
-    expect(screen.queryByText(/reportes y estadísticas/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /cerrar sesión/i })).not.toBeInTheDocument();
   });
 
-  it("da acceso con credenciales correctas", async () => {
+  it("da acceso y carga el panel del cliente con credenciales correctas", async () => {
     const user = userEvent.setup();
     signInWithPassword.mockResolvedValue({ error: null });
     renderPagina();
 
-    await user.type(email(), "admin@aloha.net.ar");
+    await user.type(email(), "avc@aloha.net.ar");
     await user.type(password(), "AlohaDemo2104!");
     await user.click(ingresar());
 
-    expect(await screen.findByText(/reportes y estadísticas/i)).toBeInTheDocument();
-    expect(signInWithPassword).toHaveBeenCalledWith({ email: "admin@aloha.net.ar", password: "AlohaDemo2104!" });
+    expect(signInWithPassword).toHaveBeenCalledWith({ email: "avc@aloha.net.ar", password: "AlohaDemo2104!" });
+    // El nombre del cliente logueado pasa a encabezar la página.
+    expect(await screen.findByRole("heading", { name: "AVC" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /información/i })).toBeInTheDocument();
   });
 
   it("respeta una sesión ya iniciada al cargar la página", async () => {
     getSession.mockResolvedValue({ data: { session: { user: { id: "1" } } } });
     renderPagina();
 
-    expect(await screen.findByText(/reportes y estadísticas/i)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "AVC" })).toBeInTheDocument();
+  });
+
+  it("muestra un aviso si el panel no puede cargar los datos del cliente", async () => {
+    getSession.mockResolvedValue({ data: { session: { user: { id: "1" } } } });
+    resultadoCliente = { data: null, error: { message: "RLS denied" } };
+    renderPagina();
+
+    expect(await screen.findByText(/no pudimos cargar tu panel/i)).toBeInTheDocument();
   });
 
   it("cerrar sesión llama a supabase.auth.signOut()", async () => {
-    const user = userEvent.setup();
     getSession.mockResolvedValue({ data: { session: { user: { id: "1" } } } });
     signOut.mockResolvedValue({ error: null });
     renderPagina();
 
-    await user.click(await screen.findByRole("button", { name: /cerrar sesión/i }));
+    await userEvent.setup().click(await screen.findByRole("button", { name: /cerrar sesión/i }));
 
     expect(signOut).toHaveBeenCalled();
   });
