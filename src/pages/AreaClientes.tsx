@@ -36,6 +36,10 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
     setLoading(false);
 
     if (authError) {
+      // El mensaje visible se mantiene genérico a propósito (no decir si el
+      // email existe o no); el detalle real queda en la consola para poder
+      // diagnosticar problemas de configuración sin exponerlos en pantalla.
+      console.error("Supabase signInWithPassword error:", authError.message, authError.status);
       setError(true);
     } else {
       onLogin();
