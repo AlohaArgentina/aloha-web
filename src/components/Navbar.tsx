@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { usePostHog } from "@posthog/react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
@@ -42,22 +42,18 @@ const Navbar = () => {
               {item.label}
             </a>
           ))}
-          {/* Acceso al futuro portal de clientes: enlace liviano, no compite en peso visual con el CTA */}
+          {/* Acceso al futuro portal de clientes: look propio (borde + fondo sutil),
+              se distingue de los links de navegación sin competir con un CTA de venta */}
           <a href="/area-clientes"
             onClick={() => posthog.capture("area_clientes_clicked", { location: "desktop_nav" })}
-            className="text-sm font-medium text-primary-foreground/80 hover:text-accent transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-primary/40 bg-primary/10 backdrop-blur-sm
+              text-sm font-semibold text-primary-foreground
+              hover:bg-primary/20 hover:border-primary/60
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-secondary
+              transition-colors whitespace-nowrap"
           >
+            <Lock size={14} />
             Área Clientes
-          </a>
-          {/* CTA principal */}
-          <a href="/request"
-            onClick={() => posthog.capture("cta_clicked", { location: "desktop_nav" })}
-            className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-semibold text-accent-foreground shadow-md
-              bg-accent hover:bg-accent/90 whitespace-nowrap
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-secondary
-              transition-colors"
-          >
-            Hablemos de tu operación
           </a>
         </div>
 
@@ -84,9 +80,10 @@ const Navbar = () => {
                 </a>
               ))}
               <a href="/area-clientes" onClick={() => { setOpen(false); posthog.capture("area_clientes_clicked", { location: "mobile_nav" }); }}
-                className="text-sm font-semibold text-center px-5 py-2.5 rounded-lg mt-2
-                  border border-primary-foreground/30 text-primary-foreground/90 hover:border-accent hover:text-accent transition-colors"
+                className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-center px-5 py-2.5 rounded-lg mt-2
+                  border border-primary/40 bg-primary/10 text-primary-foreground hover:bg-primary/20 hover:border-primary/60 transition-colors"
               >
+                <Lock size={16} />
                 Área Clientes
               </a>
               <a href="/request" onClick={() => { setOpen(false); posthog.capture("cta_clicked", { location: "mobile_nav" }); }}
