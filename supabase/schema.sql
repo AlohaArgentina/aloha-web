@@ -64,3 +64,12 @@ create policy "cada cliente ve solo sus propias facturas" on facturas
   for select using (
     cliente_id in (select id from clientes where auth_user_id = (select auth.uid()))
   );
+
+-- Crear tablas por SQL (en vez de por el editor de tablas de Supabase) no
+-- otorga automáticamente permiso de lectura a los roles de la API. RLS
+-- controla QUÉ filas puede ver cada quien, pero antes de eso Postgres exige
+-- este permiso a nivel de tabla — sin él, cualquier consulta se rechaza con
+-- 403 aunque las políticas de RLS estén perfectas. Solo se otorga a
+-- "authenticated": "anon" no recibe nada, así que un visitante sin sesión no
+-- puede leer ninguna fila de estas tablas.
+grant select on clientes, reportes, facturas to authenticated;
