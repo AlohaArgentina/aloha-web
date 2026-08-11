@@ -13,6 +13,6 @@
 -- falta volver a este script.
 
 insert into clientes (auth_user_id, nombre, responsable_cliente, coordinador_aloha, contacto_coordinador, horario_atencion, descripcion_servicio, fecha_inicio) values
-  ('PEGAR-USER-UID-DE-AVC',      'AVC',     'Completar', 'Completar', 'Completar', 'Lunes a viernes 9 a 18 hs', 'Completar', null),
-  ('PEGAR-USER-UID-DE-AIRSAT',   'Airsat',  'Completar', 'Completar', 'Completar', 'Lunes a viernes 9 a 18 hs', 'Completar', null),
-  ('PEGAR-USER-UID-DE-FIBERTY',  'Fiberty', 'Completar', 'Completar', 'Completar', 'Lunes a viernes 9 a 18 hs', 'Completar', null);
+  ('PEGAR-USER-UID-DE-AVC',      'AVC',     'Completar', 'Rodrigo Tortosa', 'rodrigo@aloha.net.ar', 'Lunes a domingo de 10 a 22 hs', 'Completar', null),
+  ('PEGAR-USER-UID-DE-AIRSAT',   'Airsat',  'Completar', 'Rodrigo Tortosa', 'rodrigo@aloha.net.ar', 'Lunes a domingo de 10 a 22 hs', 'Completar', null),
+  ('PEGAR-USER-UID-DE-FIBERTY',  'Fiberty', 'Completar', 'Rodrigo Tortosa', 'rodrigo@aloha.net.ar', 'Lunes a domingo de 10 a 22 hs', 'Completar', null);
