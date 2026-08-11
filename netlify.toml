@@ -1,7 +1,12 @@
 # Configuración de Netlify.
-# Solo declaramos el directorio de funciones. El comando de build y el
-# directorio de publicación se mantienen como estén configurados en la UI
-# de Netlify (no se sobrescriben acá a propósito).
+# Solo declaramos el directorio de funciones y la versión de Node. El
+# comando de build y el directorio de publicación se mantienen como estén
+# configurados en la UI de Netlify (no se sobrescriben acá a propósito).
+
+[build.environment]
+  # Vite 8 requiere Node 20.19+ o 22.12+; Node 20 alcanzó su fin de vida el
+  # 2026-04-30, así que usamos la 22 (LTS en mantenimiento hasta 2027-04-30).
+  NODE_VERSION = "22"
 
 [functions]
   directory = "netlify/functions"

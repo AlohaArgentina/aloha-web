@@ -7,37 +7,43 @@
 
 <url>
   <loc>https://aloha.net.ar/</loc>
-  <lastmod>2026-03-26</lastmod>
+  <lastmod>2026-08-05</lastmod>
   <priority>1.0</priority>
 </url>
 
 <url>
   <loc>https://aloha.net.ar/empleos</loc>
-  <lastmod>2026-03-26</lastmod>
+  <lastmod>2026-08-05</lastmod>
   <priority>0.8</priority>
 </url>
 
 <url>
   <loc>https://aloha.net.ar/request</loc>
-  <lastmod>2026-03-26</lastmod>
+  <lastmod>2026-08-05</lastmod>
   <priority>0.8</priority>
 </url>
 
 <url>
   <loc>https://aloha.net.ar/privacidad</loc>
-  <lastmod>2026-03-26</lastmod>
+  <lastmod>2026-07-29</lastmod>
   <priority>0.3</priority>
 </url>
 
 <url>
   <loc>https://aloha.net.ar/terminos</loc>
-  <lastmod>2026-03-26</lastmod>
+  <lastmod>2026-07-29</lastmod>
   <priority>0.3</priority>
 </url>
 
 <url>
   <loc>https://aloha.net.ar/eliminacion-datos</loc>
   <lastmod>2026-08-02</lastmod>
+  <priority>0.3</priority>
+</url>
+
+<url>
+  <loc>https://aloha.net.ar/area-clientes</loc>
+  <lastmod>2026-08-11</lastmod>
   <priority>0.3</priority>
 </url>
 

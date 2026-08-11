@@ -23,12 +23,19 @@ export function getStoredConsent(): ConsentValue | null {
   }
 }
 
+/* Evento propio para que otros componentes fijos en pantalla (p. ej. la
+   burbuja de WhatsApp) sepan cuándo el banner de cookies deja de estar
+   visible y puedan reacomodarse, sin acoplarse al estado interno de
+   CookieBanner. */
+export const CONSENT_CHANGED_EVENT = "aloha:consent-changed";
+
 function storeConsent(value: ConsentValue) {
   try {
     localStorage.setItem(STORAGE_KEY, value);
   } catch {
     // Sin storage no podemos recordar la decisión; se respeta igual en la sesión.
   }
+  window.dispatchEvent(new CustomEvent(CONSENT_CHANGED_EVENT));
 }
 
 /* Inyecta GTM una sola vez. Se llama únicamente tras el consentimiento. */
