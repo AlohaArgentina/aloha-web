@@ -1,6 +1,10 @@
 -- Paso 2: correr DESPUÉS de schema.sql y DESPUÉS de crear los 3 logins en
 -- Authentication → Users (uno por cliente, mismo proceso que el admin).
 --
+-- El login admin ya tiene su fila de demo/comercial cargada (nombre
+-- "Cuenta Demo"), usada tanto para probar el panel como para mostrárselo a
+-- leads. Este archivo es solo para AVC, Airsat y Fiberty.
+--
 -- Por cada usuario creado, entrar a su ficha en Authentication → Users y
 -- copiar el "User UID" (es un UUID, algo como 1c915c43-0876-467b-b030-...).
 -- Reemplazar los tres 'PEGAR-USER-UID-DE-...' de abajo por esos valores

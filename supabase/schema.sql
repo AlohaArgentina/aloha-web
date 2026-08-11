@@ -1,5 +1,8 @@
 -- Esquema del panel de clientes (AVC, Airsat, Fiberty).
--- Ejecutar una sola vez en Supabase: Project → SQL Editor → New query → pegar y correr.
+-- Ya aplicado en el proyecto real vía Supabase MCP (migraciones
+-- panel_clientes_schema + optimizar_rls_auth_uid). Este archivo documenta
+-- el estado actual; para un proyecto nuevo, ejecutar una sola vez en
+-- Supabase: Project → SQL Editor → New query → pegar y correr.
 --
 -- Diseño: cada cliente tiene un único login (creado a mano en Authentication →
 -- Users, igual que el admin). Esta tabla "clientes" vincula ese login
@@ -8,7 +11,9 @@
 --
 -- Row Level Security (RLS) es lo que impide que un cliente vea los datos de
 -- otro: cada política sólo deja pasar filas cuyo auth_user_id (o cuyo
--- cliente_id, vía join) coincide con el usuario logueado (auth.uid()).
+-- cliente_id, vía join) coincide con el usuario logueado. auth.uid() va
+-- envuelto en (select ...) para que se evalúe una sola vez por consulta y no
+-- una vez por fila (recomendación del linter de performance de Supabase).
 
 create table clientes (
   id uuid primary key default gen_random_uuid(),
@@ -48,14 +53,14 @@ alter table reportes enable row level security;
 alter table facturas enable row level security;
 
 create policy "cada cliente ve solo su propia fila" on clientes
-  for select using (auth_user_id = auth.uid());
+  for select using (auth_user_id = (select auth.uid()));
 
 create policy "cada cliente ve solo sus propios reportes" on reportes
   for select using (
-    cliente_id in (select id from clientes where auth_user_id = auth.uid())
+    cliente_id in (select id from clientes where auth_user_id = (select auth.uid()))
   );
 
 create policy "cada cliente ve solo sus propias facturas" on facturas
   for select using (
-    cliente_id in (select id from clientes where auth_user_id = auth.uid())
+    cliente_id in (select id from clientes where auth_user_id = (select auth.uid()))
   );
