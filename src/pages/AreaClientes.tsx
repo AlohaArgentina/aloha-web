@@ -3,19 +3,12 @@ import { LayoutDashboard, FileText, BarChart3, MessageCircle, Lock, AlertCircle,
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import { supabase, supabaseConfigurado } from "@/lib/supabaseClient";
 
-/* Login provisorio, solo para uso interno mientras se desarrolla el portal
-   real de clientes (con cuentas propias y backend). Hasta entonces hay un
-   único usuario administrador.
-
-   Ojo: esto NO es un mecanismo de seguridad real. La verificación ocurre en
-   el navegador y estas credenciales viajan en el bundle de JavaScript —
-   cualquiera que revise el código fuente las puede ver. Sirve únicamente
-   para no dejar la vista previa del portal abierta a cualquier visitante;
-   no debe usarse para proteger datos reales de clientes. */
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "AlohaDemo2104!";
-const SESSION_KEY = "aloha-area-clientes-auth";
+/* Login de /area-clientes contra Supabase Auth: mientras no existe el portal
+   real con datos por cliente, hay un único usuario administrador creado a
+   mano en el panel de Supabase (no en este código). La contraseña queda
+   hasheada del lado de Supabase, no viaja en el bundle de JavaScript. */
 
 const labelClass = "block text-sm font-medium text-foreground mb-1";
 const inputClass = "w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background transition";
@@ -27,35 +20,48 @@ const adelantos = [
 ];
 
 function LoginForm({ onLogin }: { onLogin: () => void }) {
-  const [usuario, setUsuario] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (usuario === ADMIN_USER && password === ADMIN_PASS) {
-      setError(false);
-      try {
-        sessionStorage.setItem(SESSION_KEY, "1");
-      } catch {
-        // Modo privado o storage bloqueado: la sesión no persiste, pero se respeta en esta carga.
-      }
-      onLogin();
-    } else {
+    if (!supabase) return;
+
+    setLoading(true);
+    setError(false);
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+
+    if (authError) {
       setError(true);
+    } else {
+      onLogin();
     }
   };
+
+  if (!supabaseConfigurado) {
+    return (
+      <div className="bg-card border border-border rounded-2xl p-8 shadow-sm max-w-md mx-auto text-center">
+        <AlertCircle className="text-muted-foreground mx-auto mb-3" size={28} />
+        <p className="text-muted-foreground text-sm">
+          El acceso todavía no está configurado en este entorno. Volvé a intentarlo más tarde.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card border border-border rounded-2xl p-8 shadow-sm max-w-md mx-auto">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="area-clientes-usuario" className={labelClass}>Usuario</label>
+          <label htmlFor="area-clientes-email" className={labelClass}>Email</label>
           <input
-            id="area-clientes-usuario" type="text" value={usuario}
-            onChange={(e) => setUsuario(e.target.value)}
-            placeholder="Usuario" autoComplete="username" autoFocus
+            id="area-clientes-email" type="email" value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email" autoComplete="email" autoFocus
             className={inputClass}
           />
         </div>
@@ -81,16 +87,17 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
 
         {error && (
           <div role="alert" className="flex items-center gap-2 text-destructive text-sm">
-            <AlertCircle size={16} /><span>Usuario o contraseña incorrectos.</span>
+            <AlertCircle size={16} /><span>Email o contraseña incorrectos.</span>
           </div>
         )}
 
         <button
           type="submit"
-          className="w-full inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground px-8 py-3.5 rounded-lg font-semibold hover:bg-accent/90 transition-colors"
+          disabled={loading}
+          className="w-full inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground px-8 py-3.5 rounded-lg font-semibold hover:bg-accent/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <Lock size={18} />
-          Ingresar
+          {loading ? "Ingresando..." : "Ingresar"}
         </button>
       </form>
     </div>
@@ -143,19 +150,19 @@ const AreaClientes = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    try {
-      if (sessionStorage.getItem(SESSION_KEY) === "1") setAutenticado(true);
-    } catch {
-      // Sin storage no hay sesión que recordar; se pide login igual.
-    }
+    if (!supabase) return;
+
+    supabase.auth.getSession().then(({ data }) => setAutenticado(!!data.session));
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAutenticado(!!session);
+    });
+
+    return () => subscription.subscription.unsubscribe();
   }, []);
 
-  const handleLogout = () => {
-    try {
-      sessionStorage.removeItem(SESSION_KEY);
-    } catch {
-      // Nada que limpiar si no hay storage disponible.
-    }
+  const handleLogout = async () => {
+    await supabase?.auth.signOut();
     setAutenticado(false);
   };
 
