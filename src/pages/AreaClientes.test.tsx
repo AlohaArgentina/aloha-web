@@ -23,11 +23,14 @@ const signInWithPassword = vi.fn();
 const signOut = vi.fn();
 const getSession = vi.fn();
 const onAuthStateChange = vi.fn();
+const resetPasswordForEmail = vi.fn();
+const updateUser = vi.fn();
 const unsubscribe = vi.fn();
 
 let resultadoCliente: { data: unknown; error: unknown };
 let resultadoReportes: { data: unknown; error: unknown };
 let resultadoFacturas: { data: unknown; error: unknown };
+let authCallback: ((event: string, session: unknown) => void) | undefined;
 
 const from = vi.fn((tabla: string) => ({
   select: () => ({
@@ -40,7 +43,7 @@ vi.mock("@/lib/supabaseClient", () => ({
   supabaseConfigurado: true,
   get supabase() {
     return {
-      auth: { signInWithPassword, signOut, getSession, onAuthStateChange },
+      auth: { signInWithPassword, signOut, getSession, onAuthStateChange, resetPasswordForEmail, updateUser },
       from,
     };
   },
@@ -61,8 +64,14 @@ const ingresar = () => screen.getByRole("button", { name: /ingresar/i });
 beforeEach(() => {
   signInWithPassword.mockReset();
   signOut.mockReset();
+  resetPasswordForEmail.mockReset();
+  updateUser.mockReset();
   getSession.mockReset().mockResolvedValue({ data: { session: null } });
-  onAuthStateChange.mockReset().mockReturnValue({ data: { subscription: { unsubscribe } } });
+  authCallback = undefined;
+  onAuthStateChange.mockReset().mockImplementation((cb: (event: string, session: unknown) => void) => {
+    authCallback = cb;
+    return { data: { subscription: { unsubscribe } } };
+  });
   resultadoCliente = { data: CLIENTE_DEMO, error: null };
   resultadoReportes = { data: [], error: null };
   resultadoFacturas = { data: [], error: null };
@@ -139,6 +148,56 @@ describe("AreaClientes", () => {
     await user.click(screen.getByRole("button", { name: /mostrar contraseña/i }));
 
     expect(password()).toHaveAttribute("type", "text");
+  });
+
+  it("permite pedir un link de recuperación de contraseña", async () => {
+    const user = userEvent.setup();
+    resetPasswordForEmail.mockResolvedValue({ error: null });
+    renderPagina();
+
+    await user.click(await screen.findByRole("button", { name: /olvidaste tu contraseña/i }));
+    await user.type(screen.getByLabelText(/^email$/i), "avc@aloha.net.ar");
+    await user.click(screen.getByRole("button", { name: /enviar link de recuperación/i }));
+
+    expect(resetPasswordForEmail).toHaveBeenCalledWith(
+      "avc@aloha.net.ar",
+      expect.objectContaining({ redirectTo: expect.stringContaining("/area-clientes") })
+    );
+    expect(await screen.findByText(/te enviamos un link/i)).toBeInTheDocument();
+  });
+
+  it("detecta el link de recuperación y pide elegir una contraseña nueva antes de entrar al panel", async () => {
+    const user = userEvent.setup();
+    updateUser.mockResolvedValue({ error: null });
+    renderPagina();
+    await screen.findByRole("button", { name: /ingresar/i });
+
+    authCallback?.("PASSWORD_RECOVERY", { user: { id: "1" } });
+
+    expect(await screen.findByRole("heading", { name: /elegí tu nueva contraseña/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^ingresar$/i })).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/nueva contraseña/i), "NuevaClave123!");
+    await user.type(screen.getByLabelText(/repetir contraseña/i), "NuevaClave123!");
+    await user.click(screen.getByRole("button", { name: /guardar nueva contraseña/i }));
+
+    expect(updateUser).toHaveBeenCalledWith({ password: "NuevaClave123!" });
+    // Una vez guardada, pasa directo al panel (ya tiene sesión válida).
+    expect(await screen.findByRole("heading", { name: "AVC" })).toBeInTheDocument();
+  });
+
+  it("no deja guardar si las contraseñas no coinciden", async () => {
+    const user = userEvent.setup();
+    renderPagina();
+    authCallback?.("PASSWORD_RECOVERY", { user: { id: "1" } });
+
+    await screen.findByRole("heading", { name: /elegí tu nueva contraseña/i });
+    await user.type(screen.getByLabelText(/nueva contraseña/i), "NuevaClave123!");
+    await user.type(screen.getByLabelText(/repetir contraseña/i), "OtraClave456!");
+    await user.click(screen.getByRole("button", { name: /guardar nueva contraseña/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/no coinciden/i);
+    expect(updateUser).not.toHaveBeenCalled();
   });
 });
 

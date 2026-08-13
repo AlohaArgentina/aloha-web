@@ -15,7 +15,7 @@ import PanelCliente from "./area-clientes/PanelCliente";
 const labelClass = "block text-sm font-medium text-foreground mb-1";
 const inputClass = "w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background transition";
 
-function LoginForm({ onLogin }: { onLogin: () => void }) {
+function LoginForm({ onLogin, onOlvidoContrasena }: { onLogin: () => void; onOlvidoContrasena: () => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mostrarPassword, setMostrarPassword] = useState(false);
@@ -83,6 +83,15 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
               {mostrarPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          <div className="text-right mt-2">
+            <button
+              type="button"
+              onClick={onOlvidoContrasena}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -104,8 +113,172 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
   );
 }
 
+function OlvideContrasenaForm({ onVolver }: { onVolver: () => void }) {
+  const [email, setEmail] = useState("");
+  const [enviado, setEnviado] = useState(false);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+
+    setLoading(true);
+    setError(false);
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/area-clientes`,
+    });
+    setLoading(false);
+
+    if (resetError) {
+      console.error("Supabase resetPasswordForEmail error:", resetError.message);
+      setError(true);
+    } else {
+      setEnviado(true);
+    }
+  };
+
+  if (enviado) {
+    return (
+      <div className="bg-card border border-border rounded-2xl p-8 shadow-sm max-w-md mx-auto text-center">
+        <p className="text-foreground text-sm mb-6">
+          Si el email existe, te enviamos un link para restablecer tu contraseña. Revisá tu casilla (y la carpeta de spam).
+        </p>
+        <button type="button" onClick={onVolver} className="text-accent text-sm font-medium hover:underline">
+          Volver al login
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-card border border-border rounded-2xl p-8 shadow-sm max-w-md mx-auto">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="area-clientes-recuperar-email" className={labelClass}>Email</label>
+          <input
+            id="area-clientes-recuperar-email" type="email" value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email" autoComplete="email" autoFocus
+            className={inputClass}
+          />
+        </div>
+
+        {error && (
+          <div role="alert" className="flex items-center gap-2 text-destructive text-sm">
+            <AlertCircle size={16} /><span>No pudimos enviar el email. Intentá de nuevo más tarde.</span>
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground px-8 py-3.5 rounded-lg font-semibold hover:bg-accent/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {loading ? "Enviando..." : "Enviar link de recuperación"}
+        </button>
+        <button
+          type="button"
+          onClick={onVolver}
+          className="w-full text-center text-muted-foreground text-sm hover:text-foreground transition-colors"
+        >
+          Volver al login
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function RestablecerContrasenaForm({ onListo }: { onListo: () => void }) {
+  const [password, setPassword] = useState("");
+  const [confirmacion, setConfirmacion] = useState("");
+  const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+
+    if (password.length < 8) {
+      setError("La contraseña tiene que tener al menos 8 caracteres.");
+      return;
+    }
+    if (password !== confirmacion) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+    setLoading(false);
+
+    if (updateError) {
+      console.error("Supabase updateUser error:", updateError.message);
+      setError("No pudimos actualizar la contraseña. Probá pedir un nuevo link.");
+    } else {
+      onListo();
+    }
+  };
+
+  return (
+    <div className="bg-card border border-border rounded-2xl p-8 shadow-sm max-w-md mx-auto">
+      <h2 className="text-lg font-semibold text-foreground mb-1">Elegí tu nueva contraseña</h2>
+      <p className="text-muted-foreground text-sm mb-6">Después de guardarla vas a poder ingresar a tu panel.</p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="area-clientes-nueva-password" className={labelClass}>Nueva contraseña</label>
+          <div className="relative">
+            <input
+              id="area-clientes-nueva-password" type={mostrarPassword ? "text" : "password"} value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Nueva contraseña" autoComplete="new-password"
+              className={`${inputClass} pr-11`}
+            />
+            <button
+              type="button"
+              onClick={() => setMostrarPassword((v) => !v)}
+              aria-label={mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {mostrarPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+        </div>
+        <div>
+          <label htmlFor="area-clientes-confirmar-password" className={labelClass}>Repetir contraseña</label>
+          <input
+            id="area-clientes-confirmar-password" type={mostrarPassword ? "text" : "password"} value={confirmacion}
+            onChange={(e) => setConfirmacion(e.target.value)}
+            placeholder="Repetir contraseña" autoComplete="new-password"
+            className={inputClass}
+          />
+        </div>
+
+        {error && (
+          <div role="alert" className="flex items-center gap-2 text-destructive text-sm">
+            <AlertCircle size={16} /><span>{error}</span>
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground px-8 py-3.5 rounded-lg font-semibold hover:bg-accent/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <Lock size={18} />
+          {loading ? "Guardando..." : "Guardar nueva contraseña"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 const AreaClientes = () => {
   const [autenticado, setAutenticado] = useState(false);
+  const [recuperandoPassword, setRecuperandoPassword] = useState(false);
+  const [modoAcceso, setModoAcceso] = useState<"login" | "olvide">("login");
   const { cliente, reportes, facturas, loading, error } = usePanelCliente(autenticado);
 
   useEffect(() => {
@@ -114,7 +287,14 @@ const AreaClientes = () => {
 
     supabase.auth.getSession().then(({ data }) => setAutenticado(!!data.session));
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      // El link del mail de "recuperar contraseña" abre una sesión válida
+      // igual, pero no hay que dejar pasar directo al panel con ella: hay
+      // que forzar a elegir una contraseña nueva primero.
+      if (event === "PASSWORD_RECOVERY") {
+        setRecuperandoPassword(true);
+        return;
+      }
       setAutenticado(!!session);
     });
 
@@ -126,9 +306,16 @@ const AreaClientes = () => {
     setAutenticado(false);
   };
 
-  const eyebrow = autenticado ? "Panel de cliente" : "Acceso privado";
-  const titulo = autenticado && cliente ? cliente.nombre : "Área Clientes";
-  const subtitulo = autenticado
+  const handleContrasenaRestablecida = () => {
+    setRecuperandoPassword(false);
+    setAutenticado(true);
+  };
+
+  const eyebrow = recuperandoPassword ? "Recuperar acceso" : autenticado ? "Panel de cliente" : "Acceso privado";
+  const titulo = recuperandoPassword ? "Área Clientes" : autenticado && cliente ? cliente.nombre : "Área Clientes";
+  const subtitulo = recuperandoPassword
+    ? "Elegí una nueva contraseña para continuar."
+    : autenticado
     ? "Reportes, facturación y los datos de tu cuenta con Aloha Argentina."
     : "Ingresá con tu usuario para acceder a tu panel.";
 
@@ -154,9 +341,17 @@ const AreaClientes = () => {
 
       <section className="py-16 bg-background">
         <div className={`container mx-auto ${autenticado ? "max-w-4xl" : "max-w-2xl"}`}>
-          {!autenticado && <LoginForm onLogin={() => setAutenticado(true)} />}
+          {recuperandoPassword && <RestablecerContrasenaForm onListo={handleContrasenaRestablecida} />}
 
-          {autenticado && loading && (
+          {!recuperandoPassword && !autenticado && modoAcceso === "login" && (
+            <LoginForm onLogin={() => setAutenticado(true)} onOlvidoContrasena={() => setModoAcceso("olvide")} />
+          )}
+
+          {!recuperandoPassword && !autenticado && modoAcceso === "olvide" && (
+            <OlvideContrasenaForm onVolver={() => setModoAcceso("login")} />
+          )}
+
+          {!recuperandoPassword && autenticado && loading && (
             <p className="text-center text-muted-foreground">Cargando tu panel...</p>
           )}
 
