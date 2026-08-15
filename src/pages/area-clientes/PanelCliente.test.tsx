@@ -49,7 +49,7 @@ describe("PanelCliente", () => {
   it("muestra la información general por defecto", () => {
     renderPanel();
 
-    expect(screen.getByText("AVC")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "AVC" })).toBeInTheDocument();
     expect(screen.getByText("Juan Pérez")).toBeInTheDocument();
     expect(screen.getByText("Ana Gómez")).toBeInTheDocument();
   });
