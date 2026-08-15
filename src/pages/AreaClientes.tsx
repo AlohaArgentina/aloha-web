@@ -4,13 +4,24 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import { supabase, supabaseConfigurado } from "@/lib/supabaseClient";
+import { useAdministradorActual } from "@/hooks/useAdministradorActual";
+import PanelAdministracion from "@/pages/panel-admin/PanelAdministracion";
 import { usePanelCliente } from "./area-clientes/usePanelCliente";
 import PanelCliente from "./area-clientes/PanelCliente";
 
 /* Login de /area-clientes contra Supabase Auth. Cada cliente (AVC, Airsat,
    Fiberty) tiene un único usuario creado a mano en Supabase, vinculado a su
    fila en la tabla "clientes" (ver supabase/schema.sql). La contraseña
-   queda hasheada del lado de Supabase, no viaja en el bundle de JavaScript. */
+   queda hasheada del lado de Supabase, no viaja en el bundle de JavaScript.
+
+   Este mismo login también sirve para coordinación: si la cuenta que
+   inició sesión tiene fila en "administradores" en vez de en "clientes", se
+   la manda directo al panel de administración (PanelAdministracion) — no
+   hace falta que conozcan la URL aparte /panel-admin. Por eso el chequeo de
+   rol (useAdministradorActual) corre antes de intentar cargar el panel de
+   cliente: así un admin nunca dispara la consulta de "clientes" pensada
+   para una sola fila. /panel-admin se deja funcionando igual, por si ya lo
+   tienen guardado en favoritos. */
 
 const labelClass = "block text-sm font-medium text-foreground mb-1";
 const inputClass = "w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background transition";
@@ -279,7 +290,13 @@ const AreaClientes = () => {
   const [autenticado, setAutenticado] = useState(false);
   const [recuperandoPassword, setRecuperandoPassword] = useState(false);
   const [modoAcceso, setModoAcceso] = useState<"login" | "olvide">("login");
-  const { cliente, reportes, facturas, loading, error } = usePanelCliente(autenticado);
+
+  const { admin, cargando: cargandoAdmin, error: errorAdmin } = useAdministradorActual(autenticado);
+  const esCliente = autenticado && !cargandoAdmin && !errorAdmin && !admin;
+  const { cliente, reportes, facturas, loading, error } = usePanelCliente(esCliente);
+
+  const cargandoPanel = autenticado && (cargandoAdmin || (esCliente && loading));
+  const errorPanel = autenticado && (errorAdmin || (esCliente && (error || !cliente)));
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -311,13 +328,23 @@ const AreaClientes = () => {
     setAutenticado(true);
   };
 
-  /* Una vez que el panel del cliente terminó de cargar, se deja de mostrar el
-     chrome del sitio público (Navbar, hero, Footer): el panel pasa a usar su
-     propio shell de pantalla completa (ver PanelShell), con el mismo estilo
-     que el panel interno de Aloha Desk. El login y los demás estados
-     intermedios (cargando, error, recuperar contraseña) siguen dentro del
-     sitio público tal como estaban: ahí no hace falta el shell todavía. */
-  if (autenticado && !loading && !error && cliente) {
+  /* Una vez que el panel (de cliente o de admin, según lo que haya
+     resuelto useAdministradorActual) terminó de cargar, se deja de mostrar
+     el chrome del sitio público (Navbar, hero, Footer): pasa a usar su
+     propio shell de pantalla completa, con el mismo estilo que el panel
+     interno de Aloha Desk. El login y los demás estados intermedios
+     (cargando, error, recuperar contraseña) siguen dentro del sitio
+     público tal como estaban: ahí no hace falta el shell todavía. */
+  if (autenticado && !cargandoAdmin && !errorAdmin && admin) {
+    return (
+      <div className="min-h-screen">
+        <Seo path="/area-clientes" />
+        <PanelAdministracion admin={admin} onLogout={handleLogout} />
+      </div>
+    );
+  }
+
+  if (esCliente && !loading && !error && cliente) {
     return (
       <div className="min-h-screen">
         <Seo path="/area-clientes" />
@@ -326,7 +353,7 @@ const AreaClientes = () => {
     );
   }
 
-  const eyebrow = recuperandoPassword ? "Recuperar acceso" : autenticado ? "Panel de cliente" : "Acceso privado";
+  const eyebrow = recuperandoPassword ? "Recuperar acceso" : autenticado ? "Tu panel" : "Acceso privado";
   const titulo = "Área Clientes";
   const subtitulo = recuperandoPassword
     ? "Elegí una nueva contraseña para continuar."
@@ -366,11 +393,11 @@ const AreaClientes = () => {
             <OlvideContrasenaForm onVolver={() => setModoAcceso("login")} />
           )}
 
-          {!recuperandoPassword && autenticado && loading && (
+          {!recuperandoPassword && cargandoPanel && (
             <p className="text-center text-muted-foreground">Cargando tu panel...</p>
           )}
 
-          {autenticado && !loading && (error || !cliente) && (
+          {!cargandoPanel && errorPanel && (
             <div className="bg-card border border-border rounded-2xl p-8 shadow-sm max-w-md mx-auto text-center">
               <AlertCircle className="text-muted-foreground mx-auto mb-3" size={28} />
               <p className="text-muted-foreground text-sm mb-6">

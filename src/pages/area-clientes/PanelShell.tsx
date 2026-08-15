@@ -67,9 +67,10 @@ function Marca() {
   );
 }
 
-function FichaCliente({ nombreCliente, onLogout, compacto = false }: {
+function FichaCliente({ nombreCliente, onLogout, etiquetaSalir, compacto = false }: {
   nombreCliente: string;
   onLogout: () => void;
+  etiquetaSalir: string;
   compacto?: boolean;
 }) {
   return (
@@ -82,17 +83,19 @@ function FichaCliente({ nombreCliente, onLogout, compacto = false }: {
         className="inline-flex items-center gap-2 text-xs font-medium text-primary-foreground/70 hover:text-accent transition-colors"
       >
         <LogOut size={14} />
-        Cerrar sesión
+        {etiquetaSalir}
       </button>
     </div>
   );
 }
 
-export default function PanelShell({ nombreCliente, tab, onTabChange, onLogout, children }: {
+export default function PanelShell({ nombreCliente, tab, onTabChange, onLogout, etiquetaSalir = "Cerrar sesión", banner, children }: {
   nombreCliente: string;
   tab: Tab;
   onTabChange: (tab: Tab) => void;
   onLogout: () => void;
+  etiquetaSalir?: string;
+  banner?: ReactNode;
   children: ReactNode;
 }) {
   const [abierto, setAbierto] = useState(false);
@@ -107,7 +110,7 @@ export default function PanelShell({ nombreCliente, tab, onTabChange, onLogout, 
             <Navegacion tab={tab} onTabChange={onTabChange} />
           </div>
         </div>
-        <FichaCliente nombreCliente={nombreCliente} onLogout={onLogout} />
+        <FichaCliente nombreCliente={nombreCliente} onLogout={onLogout} etiquetaSalir={etiquetaSalir} />
       </aside>
 
       {/* Barra superior en mobile */}
@@ -133,13 +136,16 @@ export default function PanelShell({ nombreCliente, tab, onTabChange, onLogout, 
             className="lg:hidden sticky top-[57px] z-40 overflow-hidden bg-secondary px-4 pb-4"
           >
             <Navegacion tab={tab} onTabChange={onTabChange} onNavegar={() => setAbierto(false)} />
-            <FichaCliente nombreCliente={nombreCliente} onLogout={onLogout} compacto />
+            <FichaCliente nombreCliente={nombreCliente} onLogout={onLogout} etiquetaSalir={etiquetaSalir} compacto />
           </motion.div>
         )}
       </AnimatePresence>
 
       <main className="lg:pl-64">
-        <div className="container mx-auto max-w-5xl py-8 lg:py-12">{children}</div>
+        <div className="container mx-auto max-w-5xl py-8 lg:py-12">
+          {banner}
+          {children}
+        </div>
       </main>
     </div>
   );

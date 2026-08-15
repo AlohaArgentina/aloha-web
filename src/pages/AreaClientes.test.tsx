@@ -18,6 +18,8 @@ const CLIENTE_DEMO = {
   contacto_coordinador: "ana@aloha.net.ar", horario_atencion: "Lunes a viernes 9 a 18 hs",
   descripcion_servicio: "Soporte técnico nivel 1 y 2", fecha_inicio: "2024-03-01",
 };
+const ADMIN_DEMO = { auth_user_id: "a1", nombre: "Rodrigo" };
+const CLIENTES_DEMO = [CLIENTE_DEMO];
 
 const signInWithPassword = vi.fn();
 const signOut = vi.fn();
@@ -30,12 +32,19 @@ const unsubscribe = vi.fn();
 let resultadoCliente: { data: unknown; error: unknown };
 let resultadoReportes: { data: unknown; error: unknown };
 let resultadoFacturas: { data: unknown; error: unknown };
+// null por defecto: la mayoría de los tests loguean una cuenta de cliente,
+// así que "¿es admin?" (tabla "administradores") tiene que resolver vacío.
+let resultadoAdministrador: { data: unknown; error: unknown };
+let resultadoClientes: { data: unknown; error: unknown };
 let authCallback: ((event: string, session: unknown) => void) | undefined;
 
 const from = vi.fn((tabla: string) => ({
   select: () => ({
     single: () => Promise.resolve(resultadoCliente),
-    order: () => Promise.resolve(tabla === "reportes" ? resultadoReportes : resultadoFacturas),
+    maybeSingle: () => Promise.resolve(resultadoAdministrador),
+    order: () => Promise.resolve(
+      tabla === "reportes" ? resultadoReportes : tabla === "clientes" ? resultadoClientes : resultadoFacturas
+    ),
   }),
 }));
 
@@ -75,6 +84,8 @@ beforeEach(() => {
   resultadoCliente = { data: CLIENTE_DEMO, error: null };
   resultadoReportes = { data: [], error: null };
   resultadoFacturas = { data: [], error: null };
+  resultadoAdministrador = { data: null, error: null };
+  resultadoClientes = { data: CLIENTES_DEMO, error: null };
 });
 
 describe("AreaClientes", () => {
@@ -111,6 +122,21 @@ describe("AreaClientes", () => {
     // El nombre del cliente logueado pasa a encabezar la página.
     expect(await screen.findByRole("heading", { name: "AVC" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /información/i })).toBeInTheDocument();
+  });
+
+  it("si la cuenta logueada es de administración, entra directo al panel de admin (no al de cliente)", async () => {
+    const user = userEvent.setup();
+    signInWithPassword.mockResolvedValue({ error: null });
+    resultadoAdministrador = { data: ADMIN_DEMO, error: null };
+    renderPagina();
+
+    await user.type(email(), "administracion@aloha.net.ar");
+    await user.type(password(), "AlohaDemo2104!");
+    await user.click(ingresar());
+
+    expect(await screen.findByRole("heading", { name: "Clientes" })).toBeInTheDocument();
+    expect(screen.getByText("Rodrigo")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "AVC" })).not.toBeInTheDocument();
   });
 
   it("respeta una sesión ya iniciada al cargar la página", async () => {

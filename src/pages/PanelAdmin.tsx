@@ -3,10 +3,8 @@ import { AlertCircle, Lock } from "lucide-react";
 import Boton from "@/components/ui/Boton";
 import { claseCampo, claseEtiqueta } from "@/components/ui/campos";
 import { supabase, supabaseConfigurado } from "@/lib/supabaseClient";
-import { traerAdministradorActual, type Administrador } from "@/datos/adminApi";
-import AdminShell from "@/pages/panel-admin/AdminShell";
-import DetalleCliente from "@/pages/panel-admin/DetalleCliente";
-import ListaClientes from "@/pages/panel-admin/ListaClientes";
+import { useAdministradorActual } from "@/hooks/useAdministradorActual";
+import PanelAdministracion from "@/pages/panel-admin/PanelAdministracion";
 
 /* Ruta de administración de cuentas de cliente (/panel-admin). No está
    linkeada desde la navegación pública a propósito: es para coordinación,
@@ -105,32 +103,10 @@ function SinPermisos({ onLogout }: { onLogout: () => void }) {
   );
 }
 
-type Vista = { tipo: "lista" } | { tipo: "detalle"; clienteId: string };
-
-function Panel({ admin, onLogout }: { admin: Administrador; onLogout: () => void }) {
-  const [vista, setVista] = useState<Vista>({ tipo: "lista" });
-
-  return (
-    <AdminShell nombreAdmin={admin.nombre} onLogout={onLogout}>
-      {vista.tipo === "lista" && (
-        <ListaClientes onAbrirCliente={(clienteId) => setVista({ tipo: "detalle", clienteId })} />
-      )}
-      {vista.tipo === "detalle" && (
-        <DetalleCliente clienteId={vista.clienteId} onVolver={() => setVista({ tipo: "lista" })} />
-      )}
-    </AdminShell>
-  );
-}
-
 export default function PanelAdmin() {
   const [autenticado, setAutenticado] = useState(false);
   const [cargandoSesion, setCargandoSesion] = useState(true);
-  const [admin, setAdmin] = useState<Administrador | null>(null);
-  /* Arranca en true (no en false) para que, apenas autenticado pasa a true,
-     el primer render ya muestre "cargando" y no un parpadeo de "no tenés
-     permisos" mientras el efecto de abajo todavía no corrió. */
-  const [cargandoAdmin, setCargandoAdmin] = useState(true);
-  const [errorAdmin, setErrorAdmin] = useState(false);
+  const { admin, cargando: cargandoAdmin, error: errorAdmin } = useAdministradorActual(autenticado);
 
   useEffect(() => {
     if (!supabase) {
@@ -149,32 +125,6 @@ export default function PanelAdmin() {
 
     return () => subscription.subscription.unsubscribe();
   }, []);
-
-  useEffect(() => {
-    if (!autenticado) {
-      setAdmin(null);
-      setCargandoAdmin(true);
-      return;
-    }
-
-    let cancelado = false;
-    setCargandoAdmin(true);
-    setErrorAdmin(false);
-    traerAdministradorActual()
-      .then((resultado) => {
-        if (!cancelado) setAdmin(resultado);
-      })
-      .catch(() => {
-        if (!cancelado) setErrorAdmin(true);
-      })
-      .finally(() => {
-        if (!cancelado) setCargandoAdmin(false);
-      });
-
-    return () => {
-      cancelado = true;
-    };
-  }, [autenticado]);
 
   const handleLogout = async () => {
     await supabase?.auth.signOut();
@@ -199,5 +149,5 @@ export default function PanelAdmin() {
   if (cargandoAdmin) return <PantallaCargando />;
   if (errorAdmin || !admin) return <SinPermisos onLogout={handleLogout} />;
 
-  return <Panel admin={admin} onLogout={handleLogout} />;
+  return <PanelAdministracion admin={admin} onLogout={handleLogout} />;
 }
