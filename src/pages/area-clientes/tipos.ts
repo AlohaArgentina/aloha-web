@@ -1,3 +1,5 @@
+export type Tab = "info" | "reportes" | "facturacion";
+
 export interface Cliente {
   id: string;
   nombre: string;

@@ -1,16 +1,10 @@
 import { useState } from "react";
 import { Building2, User, Users, Clock, FileText as FileTextIcon, Calendar, Download, CheckCircle2, Circle } from "lucide-react";
+import EncabezadoPagina from "@/components/layout/EncabezadoPagina";
 import { formatearPeriodo } from "./formato";
 import { urlPreviewDrive, urlDescargaDrive } from "@/lib/googleDrive";
-import type { Cliente, Reporte, Factura } from "./tipos";
-
-type Tab = "info" | "reportes" | "facturacion";
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: "info", label: "Información" },
-  { id: "reportes", label: "Reportes" },
-  { id: "facturacion", label: "Facturación" },
-];
+import PanelShell from "./PanelShell";
+import type { Cliente, Reporte, Factura, Tab } from "./tipos";
 
 interface DocumentoBase {
   id: string;
@@ -143,6 +137,12 @@ function InfoGeneral({ cliente }: { cliente: Cliente }) {
   );
 }
 
+const DESCRIPCIONES: Record<Tab, string> = {
+  info: "Los datos de tu cuenta con Aloha Argentina.",
+  reportes: "Reportes mensuales del servicio.",
+  facturacion: "Facturas y su estado de pago.",
+};
+
 export default function PanelCliente({ cliente, reportes, facturas, onLogout }: {
   cliente: Cliente;
   reportes: Reporte[];
@@ -152,29 +152,8 @@ export default function PanelCliente({ cliente, reportes, facturas, onLogout }: 
   const [tab, setTab] = useState<Tab>("info");
 
   return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div className="flex gap-2">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors
-                ${tab === t.id ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted"}`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={onLogout}
-          className="px-4 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:bg-muted transition-colors"
-        >
-          Cerrar sesión
-        </button>
-      </div>
+    <PanelShell nombreCliente={cliente.nombre} tab={tab} onTabChange={setTab} onLogout={onLogout}>
+      <EncabezadoPagina titulo={cliente.nombre} descripcion={DESCRIPCIONES[tab]} />
 
       {tab === "info" && <InfoGeneral cliente={cliente} />}
 
@@ -194,6 +173,6 @@ export default function PanelCliente({ cliente, reportes, facturas, onLogout }: 
           renderExtra={(factura) => <EstadoFactura estado={factura.estado} />}
         />
       )}
-    </div>
+    </PanelShell>
   );
 }

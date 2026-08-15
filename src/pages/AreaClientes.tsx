@@ -311,12 +311,27 @@ const AreaClientes = () => {
     setAutenticado(true);
   };
 
+  /* Una vez que el panel del cliente terminó de cargar, se deja de mostrar el
+     chrome del sitio público (Navbar, hero, Footer): el panel pasa a usar su
+     propio shell de pantalla completa (ver PanelShell), con el mismo estilo
+     que el panel interno de Aloha Desk. El login y los demás estados
+     intermedios (cargando, error, recuperar contraseña) siguen dentro del
+     sitio público tal como estaban: ahí no hace falta el shell todavía. */
+  if (autenticado && !loading && !error && cliente) {
+    return (
+      <div className="min-h-screen">
+        <Seo path="/area-clientes" />
+        <PanelCliente cliente={cliente} reportes={reportes} facturas={facturas} onLogout={handleLogout} />
+      </div>
+    );
+  }
+
   const eyebrow = recuperandoPassword ? "Recuperar acceso" : autenticado ? "Panel de cliente" : "Acceso privado";
-  const titulo = recuperandoPassword ? "Área Clientes" : autenticado && cliente ? cliente.nombre : "Área Clientes";
+  const titulo = "Área Clientes";
   const subtitulo = recuperandoPassword
     ? "Elegí una nueva contraseña para continuar."
     : autenticado
-    ? "Reportes, facturación y los datos de tu cuenta con Aloha Argentina."
+    ? "Cargando tu panel..."
     : "Ingresá con tu usuario para acceder a tu panel.";
 
   return (
@@ -340,7 +355,7 @@ const AreaClientes = () => {
       </section>
 
       <section className="py-16 bg-background">
-        <div className={`container mx-auto ${autenticado ? "max-w-4xl" : "max-w-2xl"}`}>
+        <div className="container mx-auto max-w-2xl">
           {recuperandoPassword && <RestablecerContrasenaForm onListo={handleContrasenaRestablecida} />}
 
           {!recuperandoPassword && !autenticado && modoAcceso === "login" && (
@@ -369,10 +384,6 @@ const AreaClientes = () => {
                 Cerrar sesión
               </button>
             </div>
-          )}
-
-          {autenticado && !loading && cliente && (
-            <PanelCliente cliente={cliente} reportes={reportes} facturas={facturas} onLogout={handleLogout} />
           )}
         </div>
       </section>

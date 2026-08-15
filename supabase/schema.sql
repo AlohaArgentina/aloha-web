@@ -73,3 +73,115 @@ create policy "cada cliente ve solo sus propias facturas" on facturas
 -- "authenticated": "anon" no recibe nada, así que un visitante sin sesión no
 -- puede leer ninguna fila de estas tablas.
 grant select on clientes, reportes, facturas to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Administradores (panel de administración de clientes, /panel-admin)
+-- ---------------------------------------------------------------------------
+--
+-- El panel de administración usa el mismo proyecto y el mismo login de
+-- Supabase Auth que /area-clientes: no hay un backend ni un proyecto
+-- separado para el equipo de Aloha. Lo que distingue a un administrador de
+-- un cliente es tener una fila en esta tabla — igual que "perfiles" separa
+-- coordinador de agente en aloha-desk.
+--
+-- El alta es manual: primero el login en Authentication → Users (con una
+-- contraseña provisoria), después una fila acá vinculada por auth_user_id.
+-- No hay jerarquía de roles: todo administrador tiene los mismos permisos.
+
+create table administradores (
+  auth_user_id uuid primary key references auth.users(id),
+  nombre text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table administradores enable row level security;
+
+create policy "un administrador ve su propia fila" on administradores
+  for select using (auth_user_id = (select auth.uid()));
+
+grant select on administradores to authenticated;
+
+-- Función auxiliar, mismo criterio que es_coordinador() en aloha-desk:
+-- security definer + search_path fijo para que una política que la llama no
+-- dispare recursión de RLS sobre "administradores" al evaluarse.
+create or replace function public.es_administrador()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from administradores where auth_user_id = (select auth.uid())
+  );
+$$;
+
+revoke execute on function public.es_administrador() from public, anon;
+grant  execute on function public.es_administrador() to authenticated;
+
+-- Alta de cliente por email. El login se sigue creando a mano en
+-- Authentication → Users, igual que hasta ahora: esta función solo vincula
+-- ese login (buscado por email) con una fila nueva en "clientes" — no hay
+-- forma de listar auth.users desde el navegador con la anon key, así que sin
+-- esto el panel no podría resolver el auth_user_id por sí solo.
+create or replace function public.crear_cliente(p_email text, p_nombre text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  v_auth_user_id uuid;
+  v_cliente_id uuid;
+begin
+  if not es_administrador() then
+    raise exception 'Solo un administrador puede crear clientes.';
+  end if;
+
+  select id into v_auth_user_id from auth.users where email = p_email;
+  if v_auth_user_id is null then
+    raise exception 'No existe ningún usuario con ese email. Crealo primero en Authentication → Users.';
+  end if;
+
+  insert into clientes (auth_user_id, nombre) values (v_auth_user_id, p_nombre)
+  returning id into v_cliente_id;
+
+  return v_cliente_id;
+end;
+$$;
+
+revoke execute on function public.crear_cliente(text, text) from public, anon;
+grant  execute on function public.crear_cliente(text, text) to authenticated;
+
+-- Hasta acá "clientes"/"reportes"/"facturas" solo tenían política de select
+-- para el propio cliente: nadie podía escribir, ni siquiera coordinación —
+-- la edición era manual en el Table Editor. Estas políticas agregan lo que
+-- falta, sin tocar las que ya existían.
+create policy "administradores pueden ver todos los clientes" on clientes
+  for select using (es_administrador());
+create policy "administradores pueden crear clientes" on clientes
+  for insert with check (es_administrador());
+create policy "administradores pueden editar clientes" on clientes
+  for update using (es_administrador()) with check (es_administrador());
+create policy "administradores pueden eliminar clientes" on clientes
+  for delete using (es_administrador());
+
+create policy "administradores pueden ver todos los reportes" on reportes
+  for select using (es_administrador());
+create policy "administradores pueden crear reportes" on reportes
+  for insert with check (es_administrador());
+create policy "administradores pueden editar reportes" on reportes
+  for update using (es_administrador()) with check (es_administrador());
+create policy "administradores pueden eliminar reportes" on reportes
+  for delete using (es_administrador());
+
+create policy "administradores pueden ver todas las facturas" on facturas
+  for select using (es_administrador());
+create policy "administradores pueden crear facturas" on facturas
+  for insert with check (es_administrador());
+create policy "administradores pueden editar facturas" on facturas
+  for update using (es_administrador()) with check (es_administrador());
+create policy "administradores pueden eliminar facturas" on facturas
+  for delete using (es_administrador());
+
+grant insert, update, delete on clientes, reportes, facturas to authenticated;

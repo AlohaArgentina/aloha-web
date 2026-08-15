@@ -14,6 +14,7 @@ const PoliticaPrivacidad = lazy(() => import("./pages/PoliticaPrivacidad"));
 const TerminosCondiciones = lazy(() => import("./pages/TerminosCondiciones"));
 const EliminacionDatos = lazy(() => import("./pages/EliminacionDatos"));
 const AreaClientes = lazy(() => import("./pages/AreaClientes"));
+const PanelAdmin = lazy(() => import("./pages/PanelAdmin"));
 
 /* Scrollea a la sección del hash (#tecnologia, #contacto, ...) incluso cuando
    se llega desde otra ruta (/empleos, /request). Reintenta unos instantes
@@ -52,6 +53,7 @@ const App = () => (
           <Route path="/terminos" element={<TerminosCondiciones />} />
           <Route path="/eliminacion-datos" element={<EliminacionDatos />} />
           <Route path="/area-clientes" element={<AreaClientes />} />
+          <Route path="/panel-admin" element={<PanelAdmin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
