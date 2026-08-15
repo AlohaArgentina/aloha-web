@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ArrowLeft, FileText, Pencil, Plus, Receipt, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, FileText, Pencil, Plus, Receipt, Trash2 } from "lucide-react";
 import EncabezadoPagina from "@/components/layout/EncabezadoPagina";
 import Boton from "@/components/ui/Boton";
 import Etiqueta from "@/components/ui/Etiqueta";
@@ -213,9 +213,10 @@ function SeccionFacturas({ clienteId }: { clienteId: string }) {
   );
 }
 
-export default function DetalleCliente({ clienteId, onVolver }: {
+export default function DetalleCliente({ clienteId, onVolver, onVerComoCliente }: {
   clienteId: string;
   onVolver: () => void;
+  onVerComoCliente: () => void;
 }) {
   const cargar = useCallback(() => traerCliente(clienteId), [clienteId]);
   const { datos: cliente, cargando, error, recargar } = useDatos(cargar, null);
@@ -236,7 +237,16 @@ export default function DetalleCliente({ clienteId, onVolver }: {
 
       {!cargando && cliente && (
         <>
-          <EncabezadoPagina titulo={cliente.nombre} descripcion="Datos de la cuenta y documentación mensual." />
+          <EncabezadoPagina
+            titulo={cliente.nombre}
+            descripcion="Datos de la cuenta y documentación mensual."
+            accion={(
+              <Boton variante="secundario" onClick={onVerComoCliente}>
+                <Eye size={16} />
+                Ver como cliente
+              </Boton>
+            )}
+          />
 
           <div className="space-y-10">
             <div>

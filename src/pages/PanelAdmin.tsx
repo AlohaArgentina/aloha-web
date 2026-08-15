@@ -7,6 +7,7 @@ import { traerAdministradorActual, type Administrador } from "@/datos/adminApi";
 import AdminShell from "@/pages/panel-admin/AdminShell";
 import DetalleCliente from "@/pages/panel-admin/DetalleCliente";
 import ListaClientes from "@/pages/panel-admin/ListaClientes";
+import VistaPreviaCliente from "@/pages/panel-admin/VistaPreviaCliente";
 
 /* Ruta de administración de cuentas de cliente (/panel-admin). No está
    linkeada desde la navegación pública a propósito: es para coordinación,
@@ -105,10 +106,22 @@ function SinPermisos({ onLogout }: { onLogout: () => void }) {
   );
 }
 
-type Vista = { tipo: "lista" } | { tipo: "detalle"; clienteId: string };
+type Vista =
+  | { tipo: "lista" }
+  | { tipo: "detalle"; clienteId: string }
+  | { tipo: "vista-cliente"; clienteId: string };
 
 function Panel({ admin, onLogout }: { admin: Administrador; onLogout: () => void }) {
   const [vista, setVista] = useState<Vista>({ tipo: "lista" });
+
+  /* La vista previa del cliente trae su propio shell (PanelShell, el mismo
+     que ve el cliente real): se muestra a pantalla completa, sin el
+     AdminShell alrededor, para que no queden dos barras laterales. */
+  if (vista.tipo === "vista-cliente") {
+    return (
+      <VistaPreviaCliente clienteId={vista.clienteId} onVolver={() => setVista({ tipo: "detalle", clienteId: vista.clienteId })} />
+    );
+  }
 
   return (
     <AdminShell nombreAdmin={admin.nombre} onLogout={onLogout}>
@@ -116,7 +129,11 @@ function Panel({ admin, onLogout }: { admin: Administrador; onLogout: () => void
         <ListaClientes onAbrirCliente={(clienteId) => setVista({ tipo: "detalle", clienteId })} />
       )}
       {vista.tipo === "detalle" && (
-        <DetalleCliente clienteId={vista.clienteId} onVolver={() => setVista({ tipo: "lista" })} />
+        <DetalleCliente
+          clienteId={vista.clienteId}
+          onVolver={() => setVista({ tipo: "lista" })}
+          onVerComoCliente={() => setVista({ tipo: "vista-cliente", clienteId: vista.clienteId })}
+        />
       )}
     </AdminShell>
   );

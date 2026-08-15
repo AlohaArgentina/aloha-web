@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Building2, User, Users, Clock, FileText as FileTextIcon, Calendar, Download, CheckCircle2, Circle } from "lucide-react";
 import EncabezadoPagina from "@/components/layout/EncabezadoPagina";
 import { formatearPeriodo } from "./formato";
@@ -143,16 +143,21 @@ const DESCRIPCIONES: Record<Tab, string> = {
   facturacion: "Facturas y su estado de pago.",
 };
 
-export default function PanelCliente({ cliente, reportes, facturas, onLogout }: {
+export default function PanelCliente({ cliente, reportes, facturas, onLogout, etiquetaSalir, banner }: {
   cliente: Cliente;
   reportes: Reporte[];
   facturas: Factura[];
   onLogout: () => void;
+  etiquetaSalir?: string;
+  banner?: ReactNode;
 }) {
   const [tab, setTab] = useState<Tab>("info");
 
   return (
-    <PanelShell nombreCliente={cliente.nombre} tab={tab} onTabChange={setTab} onLogout={onLogout}>
+    <PanelShell
+      nombreCliente={cliente.nombre} tab={tab} onTabChange={setTab} onLogout={onLogout}
+      etiquetaSalir={etiquetaSalir} banner={banner}
+    >
       <EncabezadoPagina titulo={cliente.nombre} descripcion={DESCRIPCIONES[tab]} />
 
       {tab === "info" && <InfoGeneral cliente={cliente} />}
