@@ -8,7 +8,6 @@ import CotizarServicio from "./pages/CotizarServicio";
 import PoliticaPrivacidad from "./pages/PoliticaPrivacidad";
 import TerminosCondiciones from "./pages/TerminosCondiciones";
 import EliminacionDatos from "./pages/EliminacionDatos";
-import AreaClientes from "./pages/AreaClientes";
 
 /* Punto de entrada usado solo al construir el sitio (ver scripts/prerender.mjs).
 
@@ -31,7 +30,6 @@ const PAGES: Record<string, () => JSX.Element> = {
   "/privacidad": PoliticaPrivacidad,
   "/terminos": TerminosCondiciones,
   "/eliminacion-datos": EliminacionDatos,
-  "/area-clientes": AreaClientes,
 };
 
 export function render(url: string): string {

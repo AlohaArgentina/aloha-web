@@ -42,11 +42,6 @@ export const SEO_BY_PATH: Record<string, SeoData> = {
     description:
       "Cómo solicitar la eliminación de tus datos personales almacenados por Aloha Argentina: procedimiento, plazos y qué información se elimina.",
   },
-  "/area-clientes": {
-    title: "Área Clientes | Aloha Argentina",
-    description:
-      "El portal de clientes de Aloha Argentina está en preparación. Muy pronto vas a poder acceder a tus reportes, estadísticas y facturas desde acá.",
-  },
 };
 
 /** Rutas que se prerenderizan al construir el sitio. */
