@@ -44,7 +44,7 @@ const Navbar = () => {
           ))}
           {/* Acceso al futuro portal de clientes: look propio (borde + fondo sutil),
               se distingue de los links de navegación sin competir con un CTA de venta */}
-          <a href="/area-clientes"
+          <a href="https://clientes.aloha.net.ar"
             onClick={() => posthog.capture("area_clientes_clicked", { location: "desktop_nav" })}
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-primary/40 bg-primary/10 backdrop-blur-sm
               text-sm font-semibold text-primary-foreground
@@ -79,7 +79,7 @@ const Navbar = () => {
                   {item.label}
                 </a>
               ))}
-              <a href="/area-clientes" onClick={() => { setOpen(false); posthog.capture("area_clientes_clicked", { location: "mobile_nav" }); }}
+              <a href="https://clientes.aloha.net.ar" onClick={() => { setOpen(false); posthog.capture("area_clientes_clicked", { location: "mobile_nav" }); }}
                 className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-center px-5 py-2.5 rounded-lg mt-2
                   border border-primary/40 bg-primary/10 text-primary-foreground hover:bg-primary/20 hover:border-primary/60 transition-colors"
               >

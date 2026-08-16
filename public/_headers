@@ -9,7 +9,6 @@
 #   *.posthog.com              analítica (solo tras el consentimiento)
 #   googletagmanager.com       GTM (solo tras el consentimiento)
 #   fonts.googleapis.com / fonts.gstatic.com   tipografías
-#   *.supabase.co               login de /area-clientes (Supabase Auth)
 #
 # 'unsafe-inline' en style-src es necesario: framer-motion y Tailwind aplican
 # estilos en línea en cada animación. No se habilita para scripts.
@@ -19,7 +18,7 @@
 # bloqueadas.
 
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://www.googletagmanager.com https://*.posthog.com https://*.i.posthog.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://*.posthog.com https://*.i.posthog.com https://challenges.cloudflare.com https://www.google-analytics.com https://*.supabase.co; frame-src https://challenges.cloudflare.com https://www.googletagmanager.com; form-action 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://www.googletagmanager.com https://*.posthog.com https://*.i.posthog.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://*.posthog.com https://*.i.posthog.com https://challenges.cloudflare.com https://www.google-analytics.com; frame-src https://challenges.cloudflare.com https://www.googletagmanager.com; form-action 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; upgrade-insecure-requests
   X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
