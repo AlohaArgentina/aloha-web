@@ -10,10 +10,4 @@
 /terminos             /terminos/index.html              200!
 /eliminacion-datos    /eliminacion-datos/index.html    200!
 
-# El panel de clientes se mudó a su propio dominio. Redirección permanente
-# para quien tenga el link viejo guardado (los 3 clientes reales lo usaron
-# antes de la migración) — evita un 404 en vez de mandarlos a un sitio muerto.
-/area-clientes/*     https://clientes.aloha.net.ar/:splat   301!
-/panel-admin/*        https://clientes.aloha.net.ar/panel-admin/:splat   301!
-
 /*    /index.html   200
