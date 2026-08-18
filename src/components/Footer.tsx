@@ -17,13 +17,13 @@ const Footer = () => {
             </a>
             <p className="text-primary-foreground/60 text-sm mt-1">Aloha Argentina SAS</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center gap-0.5">
             <img
               src={metaTechProvider}
               alt="Meta"
               className="h-6 w-auto object-contain"
             />
-            <span className="text-primary-foreground/70 text-xs font-medium tracking-wide">Tech Provider</span>
+            <span className="text-primary-foreground/70 text-[11px] font-medium tracking-wide">Tech Provider</span>
           </div>
           <div id="footer_nav" className="flex flex-wrap justify-center gap-6 text-sm text-primary-foreground/60">
             <a href="/#servicios" className="hover:text-accent transition-colors">Servicios</a>
