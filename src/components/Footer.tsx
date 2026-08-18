@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import metaTechProvider from "@/assets/meta-tech-provider.webp";
 
 const Footer = () => {
   return (
@@ -15,6 +16,14 @@ const Footer = () => {
               <span className="ml-4 text-lg font-bold" style={{ fontFamily: 'RidleyGrotesk-Bold', color: '#839ca6' }}>ALOHA ARGENTINA</span>
             </a>
             <p className="text-primary-foreground/60 text-sm mt-1">Aloha Argentina SAS</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <img
+              src={metaTechProvider}
+              alt="Meta"
+              className="h-6 w-auto object-contain"
+            />
+            <span className="text-primary-foreground/70 text-xs font-medium tracking-wide">Tech Provider</span>
           </div>
           <div id="footer_nav" className="flex flex-wrap justify-center gap-6 text-sm text-primary-foreground/60">
             <a href="/#servicios" className="hover:text-accent transition-colors">Servicios</a>
