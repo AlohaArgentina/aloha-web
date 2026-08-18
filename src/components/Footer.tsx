@@ -6,24 +6,26 @@ const Footer = () => {
     <footer className="hero-gradient text-primary-foreground py-12">
       <div className="container mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex flex-col items-center md:items-start">
-            <a href="/" className="flex items-center">
+          <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+            <div className="flex flex-col items-center md:items-start">
+              <a href="/" className="flex items-center">
+                <img
+                  src="/favicon.svg"
+                  alt="Logo Aloha"
+                  className="h-7 w-7 object-contain"
+                />
+                <span className="ml-4 text-lg font-bold" style={{ fontFamily: 'RidleyGrotesk-Bold', color: '#839ca6' }}>ALOHA ARGENTINA</span>
+              </a>
+              <p className="text-primary-foreground/60 text-sm mt-1">Aloha Argentina SAS</p>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
               <img
-                src="/favicon.svg"
-                alt="Logo Aloha"
-                className="h-7 w-7 object-contain"
+                src={metaTechProvider}
+                alt="Meta"
+                className="h-6 w-auto object-contain"
               />
-              <span className="ml-4 text-lg font-bold" style={{ fontFamily: 'RidleyGrotesk-Bold', color: '#839ca6' }}>ALOHA ARGENTINA</span>
-            </a>
-            <p className="text-primary-foreground/60 text-sm mt-1">Aloha Argentina SAS</p>
-          </div>
-          <div className="flex flex-col items-center gap-0.5">
-            <img
-              src={metaTechProvider}
-              alt="Meta"
-              className="h-6 w-auto object-contain"
-            />
-            <span className="text-primary-foreground/70 text-[11px] font-medium tracking-wide">Tech Provider</span>
+              <span className="text-primary-foreground/70 text-[11px] font-medium tracking-wide">Tech Provider</span>
+            </div>
           </div>
           <div id="footer_nav" className="flex flex-wrap justify-center gap-6 text-sm text-primary-foreground/60">
             <a href="/#servicios" className="hover:text-accent transition-colors">Servicios</a>
